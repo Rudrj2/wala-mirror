@@ -721,12 +721,22 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       if (V == null) {
         Assertions.UNREACHABLE("Must specify value for aastore " + governingMethod);
       }
+      /** BEGIN Custom change: expect type information in array-store instructions */
+      String strType = atts.getValue(A_TYPE);
+      TypeReference type;
+      if (strType == null) {
+        type = TypeReference.JavaLangObject;
+      } else {
+        type = TypeReference.findOrCreate(governingLoader, strType);
+      }
+      /** END Custom change: get type information in array-store instructions */
       Integer valueNumber = symbolTable.get(V);
       if (valueNumber == null) {
         Assertions.UNREACHABLE("Cannot lookup value: " + V);
       }
-      SSAArrayStoreInstruction S = insts.ArrayStoreInstruction(governingMethod.getNumberOfStatements(), refNumber.intValue(), 0, valueNumber.intValue(),
-          TypeReference.JavaLangObject);
+      /** BEGIN Custom change: expect type information in array-store instructions */
+      SSAArrayStoreInstruction S = insts.ArrayStoreInstruction(governingMethod.getNumberOfStatements(), refNumber.intValue(), 0, valueNumber.intValue(), type);
+      /** END Custom change: get type information in array-store instructions */
       governingMethod.addStatement(S);
     }
     /** BEGIN Custom change: Support also array-load instructions */
@@ -753,7 +763,13 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       if (I == null) {
         Assertions.UNREACHABLE("Must specify index for aaload " + governingMethod);
       }
-      
+      String strType = atts.getValue(A_TYPE);
+      TypeReference type;
+      if (strType == null) {
+        type = TypeReference.JavaLangObject;
+      } else {
+        type = TypeReference.findOrCreate(governingLoader, strType);
+      }
    // get the value def'fed
       String defVar = atts.getValue(A_DEF);
       if (symbolTable.keySet().contains(defVar)) {
@@ -765,7 +781,7 @@ public class XMLMethodSummaryReader implements BytecodeConstants {
       int defNum = nextLocal;
       symbolTable.put(defVar, new Integer(nextLocal++));
       SSAArrayLoadInstruction S = insts.ArrayLoadInstruction(governingMethod.getNumberOfStatements(), defNum, refNumber.intValue(), 0,
-          TypeReference.JavaLangObject);
+          type);
       governingMethod.addStatement(S);
     }
     /** END Custom change: Support also array-load instructions */
